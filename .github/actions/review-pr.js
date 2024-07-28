@@ -1,6 +1,7 @@
-const { Octokit } = require("@octokit/rest");
-const fetch = require("node-fetch");
-const Anthropic = require("@anthropic-ai/sdk");
+import { Octokit } from "@octokit/rest";
+import fetch from "node-fetch";
+import Anthropic from "@anthropic-ai/sdk";
+import { context } from "@actions/github";
 
 const githubToken = process.env.GITHUB_TOKEN;
 const apiKey = process.env.API_KEY;
@@ -12,8 +13,8 @@ const anthropic = new Anthropic({
 });
 
 const reviewPullRequest = async () => {
-  const { context } = require('@actions/github');
-  const { owner, repo, number: pull_number } = context.issue;
+  const { owner, repo } = context.repo;
+  const pull_number = context.payload.number;
 
   const results = [];
 

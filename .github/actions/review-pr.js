@@ -4,7 +4,7 @@ const Anthropic = require("@anthropic-ai/sdk");
 
 const githubToken = process.env.GITHUB_TOKEN;
 const apiKey = process.env.API_KEY;
-const changedFiles = process.env.CHANGED_FILES.split('\n');
+const changedFiles = process.env.CHANGED_FILES.split('\n').filter(file => file.trim() !== '');
 const octokit = new Octokit({ auth: githubToken });
 
 const anthropic = new Anthropic({
@@ -18,6 +18,7 @@ const reviewPullRequest = async () => {
   const results = [];
 
   for (const file of changedFiles) {
+    console.log(`Processing file: ${file}`);
     try {
       const { data: fileContent } = await octokit.repos.getContent({
         owner,
@@ -30,7 +31,7 @@ const reviewPullRequest = async () => {
       const review = await reviewFile(content, file);
 
       results.push({
-        filename,
+        filename: file,
         message: review.message,
         points: review.points,
       });
@@ -43,6 +44,7 @@ const reviewPullRequest = async () => {
 };
 
 const reviewFile = async (content, fileName) => {
+  console.log(`Reviewing file: ${fileName}`);
   const response = await anthropic.messages.create({
     model: "claude-3-5-sonnet-20240620",
     max_tokens: 150,
@@ -51,6 +53,7 @@ const reviewFile = async (content, fileName) => {
     messages: []
   });
 
+  console.log(`API Response:`, response);
   const result = JSON.parse(response.message.trim());
   return result;
 };
@@ -62,6 +65,7 @@ reviewPullRequest().then(results => {
     points: r.points,
   }));
 
+  console.log("Review Results:", result);
   process.stdout.write(JSON.stringify(result));
 }).catch(error => {
   console.error(error);

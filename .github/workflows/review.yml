@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checking out
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -19,8 +19,13 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v41
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
       - name: Install dependencies
-        run: npm install @octokit/rest node-fetch
+        run: npm install @octokit/rest node-fetch @anthropic-ai/sdk
 
       - name: Review changed files
         id: review
@@ -42,6 +47,8 @@ jobs:
 
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           issue-number: ${{ github.event.number }}
           body: ${{ steps.template.outputs.result }}

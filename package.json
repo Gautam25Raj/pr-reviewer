@@ -1,0 +1,12 @@
+{
+  "name": "ai-reviewer",
+  "version": "1.0.0",
+  "description": "An AI Code Reviewing Tool!",
+  "main": "actions/review.js",
+  "scripts": {
+    "start": "node actions/review.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}

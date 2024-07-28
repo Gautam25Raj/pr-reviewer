@@ -1,3 +1,3 @@
-| 📂 **File Name**   | 📝 **AI Comment** | 🏆 **AI Final Points**    |
+| 📂 **File**   | 💬 **Comment** | 🏆 **Score**    |
 | :-----------: |---------------| :-------------: |
 | `{{ .filename }}` | {{ .message }} | {{ .points }}/10 |

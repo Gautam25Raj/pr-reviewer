@@ -1,0 +1,50 @@
+name: PR Reviewing
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checking out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+
+      - name: Install dependencies
+        run: npm install @octokit/rest node-fetch
+
+      - name: Review changed files
+        id: review
+        run: node .github/actions/review-pr.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+
+      - name: Render template
+        id: template
+        uses: chuhlomin/render-template@v1.4
+        with:
+          template: .github/comment-template.md
+          vars: |
+            filename: ${{ steps.review.outputs.filename }}
+            message: ${{ steps.review.outputs.message }}
+            points: ${{ steps.review.outputs.points }}
+
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.number }}
+          body: ${{ steps.template.outputs.result }}
+          reactions: |
+            heart
+            hooray

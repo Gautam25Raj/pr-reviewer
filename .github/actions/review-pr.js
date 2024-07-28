@@ -1,10 +1,15 @@
 const { Octokit } = require("@octokit/rest");
 const fetch = require("node-fetch");
+const Anthropic = require("@anthropic-ai/sdk");
 
 const githubToken = process.env.GITHUB_TOKEN;
 const apiKey = process.env.API_KEY;
 const changedFiles = process.env.CHANGED_FILES.split('\n');
 const octokit = new Octokit({ auth: githubToken });
+
+const anthropic = new Anthropic({
+  apiKey: apiKey, 
+});
 
 const reviewPullRequest = async () => {
   const { context } = require('@actions/github');
@@ -13,7 +18,7 @@ const reviewPullRequest = async () => {
   const results = [];
 
   for (const file of changedFiles) {
-    if (file.endsWith('.py')) {
+    try {
       const { data: fileContent } = await octokit.repos.getContent({
         owner,
         repo,
@@ -22,43 +27,39 @@ const reviewPullRequest = async () => {
       });
 
       const content = Buffer.from(fileContent.content, 'base64').toString('utf-8');
-      const review = await reviewFile(content);
+      const review = await reviewFile(content, file);
 
       results.push({
-        file,
+        filename,
         message: review.message,
-        score: review.score,
+        points: review.points,
       });
+    } catch (error) {
+      console.error(`Error processing file ${file}:`, error);
     }
   }
 
   return results;
 };
 
-const reviewFile = async (content) => {
-  const response = await fetch('https://api.openai.com/v1/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      prompt: `Review the following Python code based on clean-code principles and PEP rules. Rate it from 1 to 10 and provide feedback in one sentence.\n\n${content}\n\nRespond with no formatting, in the following structure:\n{\n"score": int,\n"message": str\n}`,
-      max_tokens: 100,
-    }),
+const reviewFile = async (content, fileName) => {
+  const response = await anthropic.messages.create({
+    model: "claude-3-5-sonnet-20240620",
+    max_tokens: 150,
+    temperature: 0,
+    system: `You are a code reviewer. Review the following code file named ${fileName} based on best practices, code efficiency, and clarity. Provide a score from 1 to 10 and a brief feedback message.\n\n${content}\n\nRespond with no formatting, in the following structure:\n{\n"points": int,\n"message": str\n}`,
+    messages: []
   });
 
-  const data = await response.json();
-  const result = JSON.parse(data.choices[0].text.trim());
+  const result = JSON.parse(response.message.trim());
   return result;
 };
 
 reviewPullRequest().then(results => {
   const result = results.map(r => ({
-    file: r.file,
+    filename: r.filename,
     message: r.message,
-    score: r.score,
+    points: r.points,
   }));
 
   process.stdout.write(JSON.stringify(result));

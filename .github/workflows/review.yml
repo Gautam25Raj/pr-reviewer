@@ -24,7 +24,7 @@ jobs:
 
       - name: Review changed files
         id: review
-        run: node .github/actions/review.js
+        run: node .github/actions/review.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.API_KEY }}

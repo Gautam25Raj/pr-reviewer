@@ -68,7 +68,7 @@ reviewPullRequest().then(results => {
   process.exit(1);
 });
 
-reviewFiles().catch(error => {
+reviewPullRequest().catch(error => {
   console.error(error);
   process.exit(1);
 });

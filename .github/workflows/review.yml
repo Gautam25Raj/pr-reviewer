@@ -27,7 +27,7 @@ jobs:
         run: node actions/review.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.API_KEY }}
           CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
 
       - name: Render template

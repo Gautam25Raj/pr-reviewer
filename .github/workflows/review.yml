@@ -24,7 +24,7 @@ jobs:
 
       - name: Review changed files
         id: review
-        run: node actions/review.js
+        run: node .github/actions/review.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.API_KEY }}
@@ -36,9 +36,9 @@ jobs:
         with:
           template: .github/comment-template.md
           vars: |
-            file: ${{ steps.review.outputs.file }}
+            filename: ${{ steps.review.outputs.filename }}
             message: ${{ steps.review.outputs.message }}
-            score: ${{ steps.review.outputs.score }}
+            points: ${{ steps.review.outputs.points }}
 
       - name: Create comment
         uses: peter-evans/create-or-update-comment@v3
